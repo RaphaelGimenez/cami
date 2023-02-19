@@ -13,7 +13,7 @@ export default function Home({ data }: Props) {
   const map = useRef<Map | null>(null);
   const [lng, setLng] = useState(3.8772);
   const [lat, setLat] = useState(43.6101);
-  const [zoom, setZoom] = useState(6);
+  const [zoom, setZoom] = useState(3);
 
   useEffect(() => {
     if (map.current) return; // initialize map only once
@@ -114,21 +114,13 @@ export default function Home({ data }: Props) {
   );
 }
 
-export async function getServerSideProps() {
-  // Fetch data from external API
-  const d = await fetch(
-    "https://www.data.gouv.fr/fr/datasets/r/d75f05c4-f8a5-49ee-81d2-1458232286fc"
-  );
-  const data: GeoJSON.FeatureCollection = await d.json();
-
-  // assume geojson is the input GEOJson with MultiPoint features
-
+const multipointToPoint = (geoJson: GeoJSON.FeatureCollection) => {
   let outputGeoJson: GeoJSON.FeatureCollection = {
     type: "FeatureCollection",
     features: [],
   };
 
-  data.features.forEach((feature) => {
+  geoJson.features.forEach((feature) => {
     if (feature.geometry.type === "MultiPoint") {
       // select only the first coordinate of the MultiPoint
       const [lon, lat] = feature.geometry.coordinates[0];
@@ -151,8 +143,59 @@ export async function getServerSideProps() {
     }
   });
 
-  // outputGeoJson now contains the converted GEOJson with Point features
+  return outputGeoJson;
+};
+
+const mergeGeoJsons = (geoJsons: GeoJSON.FeatureCollection[]) => {
+  let outputGeoJson: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: [],
+  };
+
+  geoJsons.forEach((geoJson) => {
+    outputGeoJson.features.push(...geoJson.features);
+  });
+
+  return outputGeoJson;
+};
+
+export async function getServerSideProps() {
+  const res = await fetch(
+    "https://www.data.gouv.fr/fr/datasets/r/0ad22e1b-6352-4d86-a021-075917e25e16"
+  );
+
+  const toulouse2Data = await res.json();
+
+  const toulouse2DataFormatted = multipointToPoint(toulouse2Data);
+
+  const mulhouseRes = await fetch(
+    "https://www.data.gouv.fr/fr/datasets/r/dc7ca8ce-645a-4db4-8564-0153259357a9"
+  );
+  const mulhouseData = await mulhouseRes.json();
+
+  const castelnaudaryRes = await fetch(
+    "https://www.data.gouv.fr/fr/datasets/r/a17b8b62-505b-448e-81df-53d1c2c87845"
+  );
+
+  const castelnaudaryData = await castelnaudaryRes.json();
+  const castelnaudaryDataFormatted = multipointToPoint(castelnaudaryData);
+
+  const d = await fetch(
+    "https://www.data.gouv.fr/fr/datasets/r/d75f05c4-f8a5-49ee-81d2-1458232286fc"
+  );
+  const data: GeoJSON.FeatureCollection = await d.json();
+
+  const toulouseDataFormatted = multipointToPoint(data);
 
   // Pass data to the page via props
-  return { props: { data: outputGeoJson } };
+  return {
+    props: {
+      data: mergeGeoJsons([
+        toulouseDataFormatted,
+        toulouse2DataFormatted,
+        mulhouseData,
+        castelnaudaryDataFormatted,
+      ]),
+    },
+  };
 }
