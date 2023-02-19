@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import mapboxgl, { Map } from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
+import mapboxgl, { GeoJSONSource, Map } from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import "mapbox-gl/dist/mapbox-gl.css";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
@@ -35,7 +35,7 @@ export default function Home({ data }: Props) {
       });
 
       map.current?.addLayer({
-        id: "earthquakes-layer",
+        id: "distributeurs-layer",
         type: "circle",
         source: "distributeurs",
         filter: ["has", "point_count"],
@@ -71,6 +71,32 @@ export default function Home({ data }: Props) {
           "circle-stroke-width": 1,
           "circle-stroke-color": "#fff",
         },
+      });
+
+      map.current?.on("click", "distributeurs-layer", (e) => {
+        const features = map.current?.queryRenderedFeatures(e.point, {
+          layers: ["distributeurs-layer"],
+        });
+
+        if (!features) {
+          return;
+        }
+
+        const clusterId = features[0].properties?.cluster_id;
+
+        (
+          map.current?.getSource("distributeurs") as GeoJSONSource
+        ).getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err) return;
+
+          map.current?.easeTo({
+            center: (features[0].geometry as GeoJSON.Point).coordinates as [
+              number,
+              number
+            ],
+            zoom,
+          });
+        });
       });
     });
   });
