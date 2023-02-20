@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl, { GeoJSONSource, LngLatBounds, Map } from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Box } from "@mantine/core";
@@ -16,8 +16,15 @@ export default function Home() {
   const [bounds, setBounds] = useState<LngLatBounds | undefined>();
   const dispensers = useDispenersInBounds(bounds);
 
+  const handleMoveEnd = useCallback(() => {
+    const nextBounds = map.current?.getBounds();
+    setBounds(nextBounds);
+  }, []);
+
   useEffect(() => {
-    if (map.current) return; // initialize map only once
+    if (map.current) {
+      return;
+    } // initialize map only once
     map.current = new mapboxgl.Map({
       container: mapContainer.current || "",
       style: "mapbox://styles/mapbox/streets-v12",
@@ -37,12 +44,8 @@ export default function Home() {
       })
     );
 
-    map.current.on("idle", () => {
-      const nextBounds = map.current?.getBounds();
-      setBounds(nextBounds);
-    });
-
     map.current.on("load", () => {
+      handleMoveEnd();
       map.current?.addSource("distributeurs", {
         type: "geojson",
         data: {
@@ -87,7 +90,7 @@ export default function Home() {
         filter: ["!", ["has", "point_count"]],
         paint: {
           "circle-color": "#11b4da",
-          "circle-radius": 4,
+          "circle-radius": 6,
           "circle-stroke-width": 1,
           "circle-stroke-color": "#fff",
         },
@@ -119,7 +122,14 @@ export default function Home() {
         });
       });
     });
-  });
+  }, []);
+
+  useEffect(() => {
+    if (map.current) {
+      map.current.on("moveend", handleMoveEnd);
+      return;
+    }
+  }, [handleMoveEnd]);
 
   useEffect(() => {
     if (map.current && dispensers) {
