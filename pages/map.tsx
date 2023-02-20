@@ -1,19 +1,23 @@
 import { useEffect, useRef, useState } from "react";
-import mapboxgl, { GeoJSONSource, Map } from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
+import mapboxgl, { GeoJSONSource, LngLatBounds, Map } from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import "mapbox-gl/dist/mapbox-gl.css";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { Database } from "@/utils/database.types";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
-interface Props {
-  data: GeoJSON.FeatureCollection;
+interface Dispenser {
+  location: any;
 }
 
-export default function Home({ data }: Props) {
+export default function Home() {
   const mapContainer = useRef(null);
   const map = useRef<Map | null>(null);
   const [lng, setLng] = useState(3.8772);
   const [lat, setLat] = useState(43.6101);
   const [zoom, setZoom] = useState(3);
+  const [bounds, setBounds] = useState<LngLatBounds | undefined>();
+  const supabase = useSupabaseClient<Database>();
 
   useEffect(() => {
     if (map.current) return; // initialize map only once
@@ -24,11 +28,18 @@ export default function Home({ data }: Props) {
       zoom: zoom,
     });
 
+    map.current.on("idle", () => {
+      const nextBounds = map.current?.getBounds();
+      setBounds(nextBounds);
+    });
+
     map.current.on("load", () => {
       map.current?.addSource("distributeurs", {
         type: "geojson",
-        // Use a URL for the value for the `data` property.
-        data,
+        data: {
+          type: "FeatureCollection",
+          features: [],
+        },
         cluster: true,
         clusterMaxZoom: 14, // Max zoom to cluster points on
         clusterRadius: 50, // Radius of each cluster when clustering points (defaults to 50)
@@ -101,6 +112,43 @@ export default function Home({ data }: Props) {
     });
   });
 
+  useEffect(() => {
+    if (bounds) {
+      const getDispensers = async () => {
+        const { data, error } = await supabase.rpc("dispensers_in_view", {
+          min_lat: bounds.getSouth(),
+          min_long: bounds.getWest(),
+          max_lat: bounds.getNorth(),
+          max_long: bounds.getEast(),
+        });
+
+        const regex = /\(([^)]+)\)/;
+
+        const outputGeoJson: GeoJSON.FeatureCollection = {
+          type: "FeatureCollection",
+          features:
+            (data as unknown as Dispenser[])?.map((d) => {
+              return {
+                type: "Feature",
+                properties: {},
+                geometry: {
+                  type: "Point",
+                  coordinates: d.location
+                    .match(regex)[1]
+                    .split(" ") as GeoJSON.Position,
+                },
+              };
+            }) || [],
+        };
+
+        (map.current?.getSource("distributeurs") as GeoJSONSource).setData(
+          outputGeoJson
+        );
+      };
+      getDispensers();
+    }
+  }, [supabase, bounds]);
+
   return (
     <>
       <div style={{ height: "100vh", width: "100%" }}>
@@ -112,90 +160,4 @@ export default function Home({ data }: Props) {
       </div>
     </>
   );
-}
-
-const multipointToPoint = (geoJson: GeoJSON.FeatureCollection) => {
-  let outputGeoJson: GeoJSON.FeatureCollection = {
-    type: "FeatureCollection",
-    features: [],
-  };
-
-  geoJson.features.forEach((feature) => {
-    if (feature.geometry.type === "MultiPoint") {
-      // select only the first coordinate of the MultiPoint
-      const [lon, lat] = feature.geometry.coordinates[0];
-
-      // create a new Point feature with the first coordinate
-      const pointFeature: GeoJSON.Feature = {
-        type: "Feature",
-        geometry: {
-          type: "Point",
-          coordinates: [lon, lat],
-        },
-        properties: feature.properties,
-      };
-
-      // add the new Point feature to the output GeoJson
-      outputGeoJson.features.push(pointFeature);
-    } else {
-      // add non-MultiPoint features as-is
-      outputGeoJson.features.push(feature);
-    }
-  });
-
-  return outputGeoJson;
-};
-
-const mergeGeoJsons = (geoJsons: GeoJSON.FeatureCollection[]) => {
-  let outputGeoJson: GeoJSON.FeatureCollection = {
-    type: "FeatureCollection",
-    features: [],
-  };
-
-  geoJsons.forEach((geoJson) => {
-    outputGeoJson.features.push(...geoJson.features);
-  });
-
-  return outputGeoJson;
-};
-
-export async function getServerSideProps() {
-  const res = await fetch(
-    "https://www.data.gouv.fr/fr/datasets/r/0ad22e1b-6352-4d86-a021-075917e25e16"
-  );
-
-  const toulouse2Data = await res.json();
-
-  const toulouse2DataFormatted = multipointToPoint(toulouse2Data);
-
-  const mulhouseRes = await fetch(
-    "https://www.data.gouv.fr/fr/datasets/r/dc7ca8ce-645a-4db4-8564-0153259357a9"
-  );
-  const mulhouseData = await mulhouseRes.json();
-
-  const castelnaudaryRes = await fetch(
-    "https://www.data.gouv.fr/fr/datasets/r/a17b8b62-505b-448e-81df-53d1c2c87845"
-  );
-
-  const castelnaudaryData = await castelnaudaryRes.json();
-  const castelnaudaryDataFormatted = multipointToPoint(castelnaudaryData);
-
-  const d = await fetch(
-    "https://www.data.gouv.fr/fr/datasets/r/d75f05c4-f8a5-49ee-81d2-1458232286fc"
-  );
-  const data: GeoJSON.FeatureCollection = await d.json();
-
-  const toulouseDataFormatted = multipointToPoint(data);
-
-  // Pass data to the page via props
-  return {
-    props: {
-      data: mergeGeoJsons([
-        toulouseDataFormatted,
-        toulouse2DataFormatted,
-        mulhouseData,
-        castelnaudaryDataFormatted,
-      ]),
-    },
-  };
 }
