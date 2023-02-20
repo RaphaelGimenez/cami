@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
 import { SessionContextProvider, Session } from "@supabase/auth-helpers-react";
 import { AppProps } from "next/app";
+import { MantineProvider } from "@mantine/core";
 
 function MyApp({
   Component,
@@ -16,7 +17,16 @@ function MyApp({
       supabaseClient={supabase}
       initialSession={pageProps.initialSession}
     >
-      <Component {...pageProps} />
+      <MantineProvider
+        withGlobalStyles
+        withNormalizeCSS
+        theme={{
+          /** Put your mantine theme override here */
+          colorScheme: "light",
+        }}
+      >
+        <Component {...pageProps} />
+      </MantineProvider>
     </SessionContextProvider>
   );
 }
