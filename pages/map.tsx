@@ -4,12 +4,9 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { Database } from "@/utils/database.types";
 import { Box } from "@mantine/core";
+import useDispenersInBounds from "@/hooks/useDispensersInBounds";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
-
-interface Dispenser {
-  location: any;
-}
 
 export default function Home() {
   const mapContainer = useRef(null);
@@ -18,7 +15,7 @@ export default function Home() {
   const [lat, setLat] = useState(43.6101);
   const [zoom, setZoom] = useState(3);
   const [bounds, setBounds] = useState<LngLatBounds | undefined>();
-  const supabase = useSupabaseClient<Database>();
+  const dispensers = useDispenersInBounds(bounds);
 
   useEffect(() => {
     if (map.current) return; // initialize map only once
@@ -55,7 +52,7 @@ export default function Home() {
         },
         cluster: true,
         clusterMaxZoom: 14, // Max zoom to cluster points on
-        clusterRadius: 50, // Radius of each cluster when clustering points (defaults to 50)
+        clusterRadius: 40, // Radius of each cluster when clustering points (defaults to 50)
       });
 
       map.current?.addLayer({
@@ -126,41 +123,12 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (bounds) {
-      const getDispensers = async () => {
-        const { data, error } = await supabase.rpc("dispensers_in_view", {
-          min_lat: bounds.getSouth(),
-          min_long: bounds.getWest(),
-          max_lat: bounds.getNorth(),
-          max_long: bounds.getEast(),
-        });
-
-        const regex = /\(([^)]+)\)/;
-
-        const outputGeoJson: GeoJSON.FeatureCollection = {
-          type: "FeatureCollection",
-          features:
-            (data as unknown as Dispenser[])?.map((d) => {
-              return {
-                type: "Feature",
-                properties: {},
-                geometry: {
-                  type: "Point",
-                  coordinates: d.location
-                    .match(regex)[1]
-                    .split(" ") as GeoJSON.Position,
-                },
-              };
-            }) || [],
-        };
-
-        (map.current?.getSource("distributeurs") as GeoJSONSource).setData(
-          outputGeoJson
-        );
-      };
-      getDispensers();
+    if (map.current && dispensers) {
+      (map.current.getSource("distributeurs") as GeoJSONSource)?.setData(
+        dispensers
+      );
     }
-  }, [supabase, bounds]);
+  }, [dispensers]);
 
   return (
     <>
