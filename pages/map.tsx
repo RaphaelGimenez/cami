@@ -153,6 +153,7 @@ export default function Home() {
           position: "absolute",
           bottom: "calc(var(--mantine-footer-height, 0px) + 16px)",
           right: 16,
+          zIndex: 1000,
         }}
       >
         <MapTools />
