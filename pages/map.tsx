@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl, { GeoJSONSource, LngLatBounds, Map } from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import "mapbox-gl/dist/mapbox-gl.css";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
-import { Database } from "@/utils/database.types";
 import { Box } from "@mantine/core";
 import useDispenersInBounds from "@/hooks/useDispensersInBounds";
+import { MapTools } from "@/components/MapTools";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -138,6 +137,15 @@ export default function Home() {
           ref={mapContainer}
           className="map-container"
         />
+      </Box>
+      <Box
+        sx={{
+          position: "absolute",
+          bottom: "calc(var(--mantine-footer-height, 0px) + 16px)",
+          right: 16,
+        }}
+      >
+        <MapTools />
       </Box>
     </>
   );
