@@ -3,6 +3,7 @@ import mapboxgl, { GeoJSONSource, LngLatBounds, Map } from "mapbox-gl"; // eslin
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { Database } from "@/utils/database.types";
+import { Box } from "@mantine/core";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -163,13 +164,13 @@ export default function Home() {
 
   return (
     <>
-      <div style={{ height: "100vh", width: "100%" }}>
-        <div
-          style={{ height: "100%" }}
+      <Box sx={{ height: "100%" }}>
+        <Box
+          sx={{ height: "100%" }}
           ref={mapContainer}
           className="map-container"
         />
-      </div>
+      </Box>
     </>
   );
 }

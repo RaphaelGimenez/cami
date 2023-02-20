@@ -3,6 +3,7 @@ import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
 import { SessionContextProvider, Session } from "@supabase/auth-helpers-react";
 import { AppProps } from "next/app";
 import { MantineProvider } from "@mantine/core";
+import Layout from "@/components/layout";
 
 function MyApp({
   Component,
@@ -25,7 +26,9 @@ function MyApp({
           colorScheme: "light",
         }}
       >
-        <Component {...pageProps} />
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
       </MantineProvider>
     </SessionContextProvider>
   );
