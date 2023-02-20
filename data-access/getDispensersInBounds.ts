@@ -1,6 +1,6 @@
 import { LngLatBounds } from "mapbox-gl";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Dispenser } from "@/types/interfaces";
+import { DispenserRow } from "@/types/interfaces";
 import { Database } from "@/utils/database.types";
 
 const getDispensersInBounds = async (
@@ -31,7 +31,7 @@ const getDispensersInBounds = async (
   const outputGeoJson: GeoJSON.FeatureCollection<GeoJSON.Point> = {
     type: "FeatureCollection",
     features:
-      (data as unknown as Dispenser[])?.map((d) => {
+      (data as unknown as DispenserRow[])?.map((d) => {
         const matches = d.location.match(regex);
         if (!matches) {
           return {
@@ -47,7 +47,10 @@ const getDispensersInBounds = async (
 
         return {
           type: "Feature",
-          properties: {},
+          properties: {
+            id: d.id,
+            status: d.status,
+          },
           geometry: {
             type: "Point",
             coordinates: [
