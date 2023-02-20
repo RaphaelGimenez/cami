@@ -4,6 +4,10 @@ import { SessionContextProvider, Session } from "@supabase/auth-helpers-react";
 import { AppProps } from "next/app";
 import { MantineProvider } from "@mantine/core";
 import Layout from "@/components/layout";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { NotificationsProvider } from "@mantine/notifications";
+
+const queryClient = new QueryClient();
 
 function MyApp({
   Component,
@@ -18,18 +22,22 @@ function MyApp({
       supabaseClient={supabase}
       initialSession={pageProps.initialSession}
     >
-      <MantineProvider
-        withGlobalStyles
-        withNormalizeCSS
-        theme={{
-          /** Put your mantine theme override here */
-          colorScheme: "light",
-        }}
-      >
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
-      </MantineProvider>
+      <QueryClientProvider client={queryClient}>
+        <MantineProvider
+          withGlobalStyles
+          withNormalizeCSS
+          theme={{
+            /** Put your mantine theme override here */
+            colorScheme: "light",
+          }}
+        >
+          <NotificationsProvider>
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </NotificationsProvider>
+        </MantineProvider>
+      </QueryClientProvider>
     </SessionContextProvider>
   );
 }
