@@ -14,7 +14,7 @@ export default function Home() {
   const [lat, setLat] = useState(43.6101);
   const [zoom, setZoom] = useState(3);
   const [bounds, setBounds] = useState<LngLatBounds | undefined>();
-  const dispensers = useDispenersInBounds(bounds);
+  const { data: dispensers, status } = useDispenersInBounds(bounds);
 
   const handleMoveEnd = useCallback(() => {
     const nextBounds = map.current?.getBounds();
