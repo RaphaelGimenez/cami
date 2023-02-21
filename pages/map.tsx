@@ -12,6 +12,7 @@ import { openConfirmModal } from "@mantine/modals";
 import useUpdateDispenser from "@/hooks/useUpdateDispenser";
 import { Database } from "@/utils/database.types";
 import useCreateDispenserStatus from "@/hooks/useCreateDispenserStatus";
+import Layout from "@/components/layout";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -204,7 +205,7 @@ export default function Home() {
   }, [deleteDispenser, handleCloseDispenserCard]);
 
   return (
-    <>
+    <Layout>
       <Box sx={{ height: "100%" }}>
         <Box
           sx={{ height: "100%" }}
@@ -236,6 +237,6 @@ export default function Home() {
           }
         />
       )}
-    </>
+    </Layout>
   );
 }

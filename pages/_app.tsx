@@ -34,9 +34,7 @@ function MyApp({
         >
           <NotificationsProvider>
             <ModalsProvider>
-              <Layout>
-                <Component {...pageProps} />
-              </Layout>
+              <Component {...pageProps} />
             </ModalsProvider>
           </NotificationsProvider>
         </MantineProvider>

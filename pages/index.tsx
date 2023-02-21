@@ -1,5 +1,6 @@
 import { Auth, ThemeSupa } from "@supabase/auth-ui-react";
 import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
+import HeroTitle from "@/components/hero-title";
 
 const Home = () => {
   const session = useSession();
@@ -15,7 +16,7 @@ const Home = () => {
           providers={["google", "facebook", "twitter"]}
         />
       ) : (
-        <p>Account page will go here.</p>
+        <HeroTitle />
       )}
     </div>
   );
