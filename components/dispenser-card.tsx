@@ -1,3 +1,4 @@
+import useGetDispenserStatus from "@/hooks/useGetDispenserStatus";
 import useProfile from "@/hooks/useProfile";
 import { DispenserRow } from "@/types/interfaces";
 import { Database } from "@/utils/database.types";
@@ -33,6 +34,8 @@ const DispenserCard = ({
   isLoading,
   onVote,
 }: DispenserCardProps) => {
+  const dispenserStatus = useGetDispenserStatus(dispenser.id);
+
   return (
     <Card
       sx={(theme) => ({
@@ -51,7 +54,13 @@ const DispenserCard = ({
         })}
       >
         <Flex justify="space-between" align="center">
-          <Badge color="orange">Badge</Badge>
+          <Group>
+            {dispenserStatus.data?.map(({ status, id }) => (
+              <Badge color="orange" key={id}>
+                {status}
+              </Badge>
+            ))}
+          </Group>
           <Group>
             {userRole === "admin" && (
               <ActionIcon
