@@ -9,6 +9,9 @@ import DispenserCard from "@/components/dispenser-card";
 import useProfile from "@/hooks/useProfile";
 import useDeleteDispenser from "@/hooks/useDeleteDispenser";
 import { openConfirmModal } from "@mantine/modals";
+import useUpdateDispenser from "@/hooks/useUpdateDispenser";
+import { Database } from "@/utils/database.types";
+import useCreateDispenserStatus from "@/hooks/useCreateDispenserStatus";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -25,6 +28,8 @@ export default function Home() {
     null
   );
   const deleteDispenser = useDeleteDispenser();
+  const updateDispenser = useUpdateDispenser();
+  const createDispenserStatus = useCreateDispenserStatus();
 
   const handleMoveEnd = useCallback(() => {
     const nextBounds = map.current?.getBounds();
@@ -47,6 +52,16 @@ export default function Home() {
       });
     },
     [deleteDispenser]
+  );
+
+  const handleVote = useCallback(
+    (id: number, status: Database["public"]["Enums"]["DISPENSER_STATUS"]) => {
+      createDispenserStatus.mutate({
+        dispenserId: id,
+        status,
+      });
+    },
+    [createDispenserStatus]
   );
 
   useEffect(() => {
@@ -213,8 +228,12 @@ export default function Home() {
           dispenser={currentDispenser}
           onClose={handleCloseDispenserCard}
           onDelete={handleDeleteDispenser}
+          onVote={handleVote}
           userRole={data?.role}
-          isLoading={deleteDispenser.status === "loading"}
+          isLoading={
+            deleteDispenser.status === "loading" ||
+            createDispenserStatus.status === "loading"
+          }
         />
       )}
     </>

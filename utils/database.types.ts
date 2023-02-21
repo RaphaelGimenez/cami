@@ -34,6 +34,26 @@ export interface Database {
   }
   public: {
     Tables: {
+      dispenser_status: {
+        Row: {
+          created_at: string | null
+          dispenser_id: number
+          id: number
+          status: Database["public"]["Enums"]["DISPENSER_STATUS"]
+        }
+        Insert: {
+          created_at?: string | null
+          dispenser_id: number
+          id?: number
+          status?: Database["public"]["Enums"]["DISPENSER_STATUS"]
+        }
+        Update: {
+          created_at?: string | null
+          dispenser_id?: number
+          id?: number
+          status?: Database["public"]["Enums"]["DISPENSER_STATUS"]
+        }
+      }
       dispensers: {
         Row: {
           created_at: string | null
@@ -100,6 +120,7 @@ export interface Database {
       }
     }
     Enums: {
+      DISPENSER_STATUS: "notfound" | "unknown" | "empty" | "low" | "ok"
       ROLES: "admin" | "user"
     }
     CompositeTypes: {

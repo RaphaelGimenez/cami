@@ -1,5 +1,6 @@
 import useProfile from "@/hooks/useProfile";
 import { DispenserRow } from "@/types/interfaces";
+import { Database } from "@/utils/database.types";
 import {
   ActionIcon,
   Badge,
@@ -18,13 +19,19 @@ interface DispenserCardProps {
   onDelete: (dispenserId: number) => void;
   userRole?: "admin" | "user";
   isLoading: boolean;
+  onVote: (
+    dispenserId: number,
+    status: Database["public"]["Enums"]["DISPENSER_STATUS"]
+  ) => void;
 }
+
 const DispenserCard = ({
   dispenser,
   onClose,
   onDelete,
   userRole,
   isLoading,
+  onVote,
 }: DispenserCardProps) => {
   return (
     <Card
@@ -70,10 +77,18 @@ const DispenserCard = ({
         })}
       >
         <Group>
-          <Button color="dark">👎 Introuvable</Button>
-          <Button color="red">😑 Vide</Button>
-          <Button color="orange">🦖 Bientôt vide</Button>
-          <Button color="green">🌈 Disponible</Button>
+          <Button color="dark" onClick={() => onVote(dispenser.id, "notfound")}>
+            👎 Introuvable
+          </Button>
+          <Button color="red" onClick={() => onVote(dispenser.id, "empty")}>
+            😑 Vide
+          </Button>
+          <Button color="orange" onClick={() => onVote(dispenser.id, "low")}>
+            🦖 Bientôt vide
+          </Button>
+          <Button color="green" onClick={() => onVote(dispenser.id, "ok")}>
+            🌈 Disponible
+          </Button>
         </Group>
       </Card.Section>
     </Card>
