@@ -6,6 +6,7 @@ import { MantineProvider } from "@mantine/core";
 import Layout from "@/components/layout";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NotificationsProvider } from "@mantine/notifications";
+import { ModalsProvider } from "@mantine/modals";
 
 const queryClient = new QueryClient();
 
@@ -32,9 +33,11 @@ function MyApp({
           }}
         >
           <NotificationsProvider>
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
+            <ModalsProvider>
+              <Layout>
+                <Component {...pageProps} />
+              </Layout>
+            </ModalsProvider>
           </NotificationsProvider>
         </MantineProvider>
       </QueryClientProvider>

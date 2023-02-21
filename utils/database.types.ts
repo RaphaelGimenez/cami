@@ -59,25 +59,25 @@ export interface Database {
           avatar_url: string | null
           full_name: string | null
           id: string
+          role: Database["public"]["Enums"]["ROLES"]
           updated_at: string | null
           username: string | null
-          website: string | null
         }
         Insert: {
           avatar_url?: string | null
           full_name?: string | null
           id: string
+          role?: Database["public"]["Enums"]["ROLES"]
           updated_at?: string | null
           username?: string | null
-          website?: string | null
         }
         Update: {
           avatar_url?: string | null
           full_name?: string | null
           id?: string
+          role?: Database["public"]["Enums"]["ROLES"]
           updated_at?: string | null
           username?: string | null
-          website?: string | null
         }
       }
     }
@@ -94,9 +94,13 @@ export interface Database {
         }
         Returns: Record<string, unknown>[]
       }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      ROLES: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never

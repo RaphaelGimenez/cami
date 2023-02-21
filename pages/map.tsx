@@ -6,10 +6,14 @@ import useDispenersInBounds from "@/hooks/useDispensersInBounds";
 import { MapTools } from "@/components/MapTools";
 import { DispenserRow } from "@/types/interfaces";
 import DispenserCard from "@/components/dispenser-card";
+import useProfile from "@/hooks/useProfile";
+import useDeleteDispenser from "@/hooks/useDeleteDispenser";
+import { openConfirmModal } from "@mantine/modals";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
 export default function Home() {
+  const { data, error } = useProfile();
   const mapContainer = useRef(null);
   const map = useRef<Map | null>(null);
   const [lng, setLng] = useState(3.8772);
@@ -20,11 +24,30 @@ export default function Home() {
   const [currentDispenser, setCurrentDispenser] = useState<DispenserRow | null>(
     null
   );
+  const deleteDispenser = useDeleteDispenser();
 
   const handleMoveEnd = useCallback(() => {
     const nextBounds = map.current?.getBounds();
     setBounds(nextBounds);
   }, []);
+
+  const handleCloseDispenserCard = useCallback(() => {
+    setCurrentDispenser(null);
+  }, []);
+
+  const handleDeleteDispenser = useCallback(
+    (id: number) => {
+      openConfirmModal({
+        title: "Supprimer le distributeur ?",
+        centered: true,
+        labels: { confirm: "Supprimer", cancel: "Annuler" },
+        confirmProps: { color: "red" },
+        onCancel: () => console.log("Cancel"),
+        onConfirm: () => deleteDispenser.mutate(id),
+      });
+    },
+    [deleteDispenser]
+  );
 
   useEffect(() => {
     if (map.current) {
@@ -158,9 +181,12 @@ export default function Home() {
     }
   }, [dispensers]);
 
-  const handleCloseDispenserCard = useCallback(() => {
-    setCurrentDispenser(null);
-  }, []);
+  useEffect(() => {
+    if (deleteDispenser.status === "success") {
+      handleCloseDispenserCard();
+      deleteDispenser.reset();
+    }
+  }, [deleteDispenser, handleCloseDispenserCard]);
 
   return (
     <>
@@ -176,7 +202,7 @@ export default function Home() {
           position: "absolute",
           bottom: "calc(var(--mantine-footer-height, 0px) + 16px)",
           right: 16,
-          zIndex: 1000,
+          zIndex: 100,
         }}
       >
         <MapTools />
@@ -186,6 +212,9 @@ export default function Home() {
         <DispenserCard
           dispenser={currentDispenser}
           onClose={handleCloseDispenserCard}
+          onDelete={handleDeleteDispenser}
+          userRole={data?.role}
+          isLoading={deleteDispenser.status === "loading"}
         />
       )}
     </>

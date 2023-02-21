@@ -1,19 +1,19 @@
+import deleteDispenser from "@/data-access/deleteDispenser";
+import { Database } from "@/utils/database.types";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import createDispenser from "@/data-access/createDispenser";
-import { NewDispenser } from "@/types/interfaces";
 
-const useCreateDispenser = () => {
-  const supabase = useSupabaseClient();
+const useDeleteDispenser = () => {
+  const supabase = useSupabaseClient<Database>();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (newDispenser: NewDispenser) =>
-      createDispenser(supabase, newDispenser),
+    mutationFn: (id: number) => deleteDispenser(supabase, id),
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dispensers", "inbounds"] });
     },
   });
 };
 
-export default useCreateDispenser;
+export default useDeleteDispenser;

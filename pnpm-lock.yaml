@@ -7,6 +7,7 @@ specifiers:
   '@mantine/dates': ^5.10.4
   '@mantine/form': ^5.10.4
   '@mantine/hooks': ^5.10.4
+  '@mantine/modals': ^5.10.4
   '@mantine/next': ^5.10.4
   '@mantine/notifications': ^5.10.4
   '@next/font': 13.1.6
@@ -37,6 +38,7 @@ dependencies:
   '@mantine/dates': 5.10.4_cshids4fm2bh7nhcqqy7euof4e
   '@mantine/form': 5.10.4_react@18.2.0
   '@mantine/hooks': 5.10.4_react@18.2.0
+  '@mantine/modals': 5.10.4_zvr3twhaqlaxovla5vk46k3pgm
   '@mantine/next': 5.10.4_pnokhhiiffeanlj7xihut5qdrq
   '@mantine/notifications': 5.10.4_zvr3twhaqlaxovla5vk46k3pgm
   '@next/font': 13.1.6
@@ -340,6 +342,21 @@ packages:
       react: '>=16.8.0'
     dependencies:
       react: 18.2.0
+    dev: false
+
+  /@mantine/modals/5.10.4_zvr3twhaqlaxovla5vk46k3pgm:
+    resolution: {integrity: sha512-kpkB+GQ6ZEdjSBJeKNbNTtv9j7OpM/wvnSIhE+o5k60td/5tO4uGMPpU4OfyA3cfVjHpfWxACHZAQ8xpzieJHA==}
+    peerDependencies:
+      '@mantine/core': 5.10.4
+      '@mantine/hooks': 5.10.4
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    dependencies:
+      '@mantine/core': 5.10.4_xgfpbscinl7gpxk3zixgsno7yu
+      '@mantine/hooks': 5.10.4_react@18.2.0
+      '@mantine/utils': 5.10.4_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /@mantine/next/5.10.4_pnokhhiiffeanlj7xihut5qdrq:
