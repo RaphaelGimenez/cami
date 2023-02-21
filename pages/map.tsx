@@ -1,19 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl, { GeoJSONSource, LngLatBounds, Map } from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import "mapbox-gl/dist/mapbox-gl.css";
-import {
-  Badge,
-  Box,
-  Button,
-  Card,
-  CloseButton,
-  Flex,
-  Group,
-  Text,
-} from "@mantine/core";
+import { Badge, Box } from "@mantine/core";
 import useDispenersInBounds from "@/hooks/useDispensersInBounds";
 import { MapTools } from "@/components/MapTools";
 import { DispenserRow } from "@/types/interfaces";
+import DispenserCard from "@/components/dispenser-card";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -166,6 +158,10 @@ export default function Home() {
     }
   }, [dispensers]);
 
+  const handleCloseDispenserCard = useCallback(() => {
+    setCurrentDispenser(null);
+  }, []);
+
   return (
     <>
       <Box sx={{ height: "100%" }}>
@@ -187,44 +183,10 @@ export default function Home() {
       </Box>
 
       {currentDispenser && (
-        <Card
-          sx={(theme) => ({
-            position: "absolute",
-            bottom: "calc(var(--mantine-footer-height, 0px) + 16px)",
-            left: 16,
-            right: 16,
-            zIndex: 1001,
-            backgroundColor: "white",
-          })}
-        >
-          <Card.Section
-            sx={(theme) => ({
-              padding: theme.spacing.md,
-            })}
-          >
-            <Flex justify="space-between" align="center">
-              <Badge color="orange">Badge</Badge>
-              <CloseButton
-                title="Close popover"
-                size="xl"
-                iconSize={20}
-                onClick={() => setCurrentDispenser(null)}
-              />
-            </Flex>
-          </Card.Section>
-          <Card.Section
-            sx={(theme) => ({
-              padding: theme.spacing.md,
-            })}
-          >
-            <Group>
-              <Button color="dark">👎 Introuvable</Button>
-              <Button color="red">😑 Vide</Button>
-              <Button color="orange">🦖 Bientôt vide</Button>
-              <Button color="green">🌈 Disponible</Button>
-            </Group>
-          </Card.Section>
-        </Card>
+        <DispenserCard
+          dispenser={currentDispenser}
+          onClose={handleCloseDispenserCard}
+        />
       )}
     </>
   );
