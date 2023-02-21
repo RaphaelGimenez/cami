@@ -13,7 +13,6 @@ export default function Account() {
   const user = useUser();
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState<Profiles["username"]>(null);
-  const [website, setWebsite] = useState<Profiles["website"]>(null);
   const [avatar_url, setAvatarUrl] = useState<Profiles["avatar_url"]>(null);
 
   useEffect(() => {
@@ -39,7 +38,6 @@ export default function Account() {
 
       if (data) {
         setUsername(data.username);
-        setWebsite(data.website);
         setAvatarUrl(data.avatar_url);
       }
     } catch (error) {
@@ -52,11 +50,9 @@ export default function Account() {
 
   async function updateProfile({
     username,
-    website,
     avatar_url,
   }: {
     username: Profiles["username"];
-    website: Profiles["website"];
     avatar_url: Profiles["avatar_url"];
   }) {
     try {
@@ -66,7 +62,6 @@ export default function Account() {
       const updates = {
         id: user.id,
         username,
-        website,
         avatar_url,
         updated_at: new Date().toISOString(),
       };
@@ -99,20 +94,11 @@ export default function Account() {
       </div>
       <div>
         <label htmlFor="website">Website</label>
-        <input
-          id="website"
-          type="website"
-          value={website || ""}
-          onChange={(e) => setWebsite(e.target.value)}
-        />
+        <input id="website" type="website" />
       </div>
 
       <div>
-        <button
-          className="button primary block"
-          onClick={() => updateProfile({ username, website, avatar_url })}
-          disabled={loading}
-        >
+        <button className="button primary block" disabled={loading}>
           {loading ? "Loading ..." : "Update"}
         </button>
       </div>
