@@ -1,6 +1,11 @@
 import useCreateDispenser from "@/hooks/useCreateDispenser";
-import { Button, LoadingOverlay, Menu, useMantineTheme } from "@mantine/core";
-import { IconChevronDown, IconPennant } from "@tabler/icons-react";
+import {
+  ActionIcon,
+  LoadingOverlay,
+  Menu,
+  useMantineTheme,
+} from "@mantine/core";
+import { IconPennant, IconTools } from "@tabler/icons-react";
 import getUserLocation from "@/utils/get-user-location";
 import { showNotification } from "@mantine/notifications";
 import { useEffect } from "react";
@@ -41,11 +46,12 @@ export function MapTools() {
     >
       <LoadingOverlay visible={status === "loading"} overlayBlur={2} />
       <Menu.Target>
-        <Button rightIcon={<IconChevronDown size={18} stroke={1.5} />} pr={12}>
-          Ajouter
-        </Button>
+        <ActionIcon color="blue" size="lg" variant="filled">
+          <IconTools size={18} />
+        </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
+        <Menu.Label>Ajouter</Menu.Label>
         <Menu.Item
           icon={
             <IconPennant size={16} color={theme.colors.blue[6]} stroke={1.5} />
