@@ -1,12 +1,10 @@
 import BadgeSlider from "@/components/badge-slider";
-import StatusBadge from "@/components/status-badge";
 import useGetDispenserStatus from "@/hooks/useGetDispenserStatus";
-import useProfile from "@/hooks/useProfile";
 import { DispenserRow } from "@/types/interfaces";
 import { Database } from "@/utils/database.types";
+import { Carousel } from "@mantine/carousel";
 import {
   ActionIcon,
-  Badge,
   Button,
   Card,
   CloseButton,
@@ -86,20 +84,56 @@ const DispenserCard = ({
           padding: theme.spacing.md,
         })}
       >
-        <Group>
-          <Button color="dark" onClick={() => onVote(dispenser.id, "notfound")}>
-            👎 Introuvable
-          </Button>
-          <Button color="red" onClick={() => onVote(dispenser.id, "empty")}>
-            😑 Vide
-          </Button>
-          <Button color="orange" onClick={() => onVote(dispenser.id, "low")}>
-            🦖 Bientôt vide
-          </Button>
-          <Button color="green" onClick={() => onVote(dispenser.id, "ok")}>
-            🌈 Disponible
-          </Button>
-        </Group>
+        <Carousel
+          slideSize="70%"
+          height={70}
+          slideGap="xs"
+          loop
+          withControls={false}
+          withIndicators
+          styles={{
+            indicator: {
+              background: "gray",
+            },
+          }}
+        >
+          <Carousel.Slide>
+            <Button
+              color="green"
+              onClick={() => onVote(dispenser.id, "ok")}
+              fullWidth
+            >
+              🌈 Disponible
+            </Button>
+          </Carousel.Slide>
+          <Carousel.Slide>
+            <Button
+              color="dark"
+              onClick={() => onVote(dispenser.id, "notfound")}
+              fullWidth
+            >
+              👎 Introuvable
+            </Button>
+          </Carousel.Slide>
+          <Carousel.Slide>
+            <Button
+              color="red"
+              onClick={() => onVote(dispenser.id, "empty")}
+              fullWidth
+            >
+              😑 Vide
+            </Button>
+          </Carousel.Slide>
+          <Carousel.Slide>
+            <Button
+              color="orange"
+              onClick={() => onVote(dispenser.id, "low")}
+              fullWidth
+            >
+              🦖 Bientôt vide
+            </Button>
+          </Carousel.Slide>
+        </Carousel>
       </Card.Section>
     </Card>
   );
