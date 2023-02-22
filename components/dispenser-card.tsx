@@ -1,3 +1,4 @@
+import StatusBadge from "@/components/status-badge";
 import useGetDispenserStatus from "@/hooks/useGetDispenserStatus";
 import useProfile from "@/hooks/useProfile";
 import { DispenserRow } from "@/types/interfaces";
@@ -56,9 +57,7 @@ const DispenserCard = ({
         <Flex justify="space-between" align="center">
           <Group>
             {dispenserStatus.data?.map(({ status, id }) => (
-              <Badge color="orange" key={id}>
-                {status}
-              </Badge>
+              <StatusBadge key={id} status={status}></StatusBadge>
             ))}
           </Group>
           <Group>
