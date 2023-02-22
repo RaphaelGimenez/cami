@@ -20,6 +20,10 @@ const useCreateDispenserStatus = () => {
       queryClient.invalidateQueries({
         queryKey: ["dispenser_status", data.dispenser_id],
       });
+
+      queryClient.invalidateQueries({
+        queryKey: ["dispensers", "inbounds"],
+      });
     },
   });
 };
