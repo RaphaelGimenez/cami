@@ -6,7 +6,7 @@ const getDispenserStatus = async (
 ) => {
   const { data, error } = await supabase
     .from("dispenser_status")
-    .select("id, status")
+    .select("id, status, created_at")
     .eq("dispenser_id", dispenserId)
     // in the last 3 days
     .gte(

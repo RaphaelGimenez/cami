@@ -1,3 +1,4 @@
+import BadgeSlider from "@/components/badge-slider";
 import StatusBadge from "@/components/status-badge";
 import useGetDispenserStatus from "@/hooks/useGetDispenserStatus";
 import useProfile from "@/hooks/useProfile";
@@ -55,11 +56,7 @@ const DispenserCard = ({
         })}
       >
         <Flex justify="space-between" align="center">
-          <Group>
-            {dispenserStatus.data?.map(({ status, id }) => (
-              <StatusBadge key={id} status={status}></StatusBadge>
-            ))}
-          </Group>
+          <Group></Group>
           <Group>
             {userRole === "admin" && (
               <ActionIcon
@@ -79,6 +76,11 @@ const DispenserCard = ({
           </Group>
         </Flex>
       </Card.Section>
+      {dispenserStatus.data && dispenserStatus.data.length ? (
+        <Card.Section>
+          <BadgeSlider statuses={dispenserStatus.data} />
+        </Card.Section>
+      ) : null}
       <Card.Section
         sx={(theme) => ({
           padding: theme.spacing.md,

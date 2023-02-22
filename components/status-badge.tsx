@@ -10,12 +10,13 @@ dayjs.extend(relativeTime);
 
 interface StatusBadgeProps {
   status: Database["public"]["Enums"]["DISPENSER_STATUS"];
+  createdAt: string;
 }
 
-const StatusBadge = ({ status }: StatusBadgeProps) => {
+const StatusBadge = ({ status, createdAt }: StatusBadgeProps) => {
   const [color, setColor] = useState("green");
   const [text, setText] = useState("Disponible");
-  const [date, setDate] = useState(dayjs().fromNow());
+  const [date, setDate] = useState(dayjs(createdAt).fromNow());
 
   useEffect(() => {
     switch (status) {
@@ -43,7 +44,7 @@ const StatusBadge = ({ status }: StatusBadgeProps) => {
   }, [status]);
 
   return (
-    <Badge color={color}>
+    <Badge color={color} fullWidth>
       {text} {date}
     </Badge>
   );
