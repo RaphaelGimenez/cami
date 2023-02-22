@@ -9,23 +9,15 @@ import { IconPennant, IconTools } from "@tabler/icons-react";
 import getUserLocation from "@/utils/get-user-location";
 import { showNotification } from "@mantine/notifications";
 import { useEffect } from "react";
+import { MutationStatus } from "@tanstack/react-query";
 
-export function MapTools() {
+interface MapToolsProps {
+  createDispenser: () => void;
+  status: MutationStatus;
+}
+
+export function MapTools({ createDispenser, status }: MapToolsProps) {
   const theme = useMantineTheme();
-  const { mutate, status } = useCreateDispenser();
-
-  const createDispenser = async () => {
-    try {
-      const location = await getUserLocation();
-      mutate({ location });
-    } catch (error) {
-      showNotification({
-        color: "red",
-        title: "Mince",
-        message: "Impossible de récupérer votre position",
-      });
-    }
-  };
 
   useEffect(() => {
     if (status === "error") {

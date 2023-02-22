@@ -1,17 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import mapboxgl, { GeoJSONSource, LngLatBounds, Map } from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
+import mapboxgl, { GeoJSONSource, LngLatBounds, Map, Marker } from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Box, useMantineTheme } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Group,
+  LoadingOverlay,
+  useMantineTheme,
+} from "@mantine/core";
 import useDispenersInBounds from "@/hooks/useDispensersInBounds";
 import { MapTools } from "@/components/MapTools";
 import { DispenserRow } from "@/types/interfaces";
 import DispenserCard from "@/components/dispenser-card";
 import useProfile from "@/hooks/useProfile";
 import useDeleteDispenser from "@/hooks/useDeleteDispenser";
-import { openConfirmModal } from "@mantine/modals";
+import { openConfirmModal, openModal, closeAllModals } from "@mantine/modals";
 import { Database } from "@/utils/database.types";
 import useCreateDispenserStatus from "@/hooks/useCreateDispenserStatus";
 import Layout from "@/components/layout";
+import { IconLocation, IconMapPin } from "@tabler/icons-react";
+import getUserLocation from "@/utils/get-user-location";
+import { showNotification } from "@mantine/notifications";
+import useCreateDispenser from "@/hooks/useCreateDispenser";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -21,6 +31,9 @@ export default function Home() {
   const map = useRef<Map | null>(null);
   const [lng, setLng] = useState(3.8772);
   const [lat, setLat] = useState(43.6101);
+  const [draggableMarkerLocation, setDraggableMarkerLocation] = useState<
+    [number, number] | null
+  >(null);
   const [zoom, setZoom] = useState(3);
   const [bounds, setBounds] = useState<LngLatBounds | undefined>();
   const { data: dispensers, status } = useDispenersInBounds(bounds);
@@ -30,6 +43,10 @@ export default function Home() {
   const deleteDispenser = useDeleteDispenser();
   const createDispenserStatus = useCreateDispenserStatus();
   const theme = useMantineTheme();
+  const createDispenser = useCreateDispenser();
+
+  const [selectPin, setSelectPin] = useState<Marker | null>(null);
+  const [isSelectingLocation, setIsSelectingLocation] = useState(false);
 
   const handleMoveEnd = useCallback(() => {
     const nextBounds = map.current?.getBounds();
@@ -63,6 +80,84 @@ export default function Home() {
     },
     [createDispenserStatus]
   );
+
+  const confirmCreateDispenser = () => {
+    openModal({
+      centered: true,
+      children: (
+        <Group>
+          <Button
+            fullWidth
+            onClick={addDraggableMarker}
+            leftIcon={<IconMapPin />}
+          >
+            Placer un marqueur sur la carte
+          </Button>
+          <Button
+            fullWidth
+            onClick={createDispenserFromLocation}
+            leftIcon={<IconLocation />}
+          >
+            Utiliser ma position
+          </Button>
+        </Group>
+      ),
+    });
+  };
+
+  const createDispenserFromPin = async () => {
+    if (!draggableMarkerLocation) {
+      return;
+    }
+    const location = draggableMarkerLocation;
+    createDispenser.mutate({ location });
+  };
+
+  const cancelPinSelection = () => {
+    setIsSelectingLocation(false);
+    if (selectPin) {
+      selectPin.remove();
+    }
+  };
+
+  const createDispenserFromLocation = async () => {
+    try {
+      const location = await getUserLocation();
+      createDispenser.mutate({ location });
+    } catch (error) {
+      showNotification({
+        color: "red",
+        title: "Mince",
+        message: "Impossible de récupérer votre position",
+      });
+    }
+  };
+
+  const addDraggableMarker = () => {
+    if (!map.current) {
+      return;
+    }
+    setIsSelectingLocation(true);
+
+    const mapCenter = map.current.getCenter();
+
+    const marker = new mapboxgl.Marker({
+      draggable: true,
+    })
+      .setLngLat(mapCenter)
+      .addTo(map.current);
+
+    function onDragEnd() {
+      const lngLat = marker.getLngLat();
+      setDraggableMarkerLocation([lngLat.lng, lngLat.lat]);
+    }
+
+    marker.on("dragend", onDragEnd);
+
+    setSelectPin(marker);
+
+    closeAllModals();
+  };
 
   useEffect(() => {
     if (map.current) {
@@ -217,6 +312,15 @@ export default function Home() {
     }
   }, [deleteDispenser, handleCloseDispenserCard]);
 
+  useEffect(() => {
+    if (createDispenser.status === "success") {
+      createDispenser.reset();
+      selectPin?.remove();
+      setSelectPin(null);
+      setIsSelectingLocation(false);
+    }
+  }, [createDispenser, selectPin]);
+
   return (
     <Layout>
       <Box sx={{ height: "100%" }}>
@@ -234,7 +338,10 @@ export default function Home() {
           zIndex: 100,
         }}
       >
-        <MapTools />
+        <MapTools
+          createDispenser={confirmCreateDispenser}
+          status={createDispenser.status}
+        />
       </Box>
 
       {currentDispenser && (
@@ -249,6 +356,40 @@ export default function Home() {
             createDispenserStatus.status === "loading"
           }
         />
+      )}
+
+      {isSelectingLocation && (
+        <Button.Group
+          sx={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "var(--mantine-footer-height, 0px)",
+            zIndex: 101,
+          }}
+        >
+          <LoadingOverlay
+            visible={createDispenser.status === "loading"}
+            overlayBlur={2}
+          />
+
+          <Button
+            fullWidth
+            onClick={createDispenserFromPin}
+            sx={{ height: "100%" }}
+          >
+            Valider la position
+          </Button>
+          <Button
+            fullWidth
+            onClick={cancelPinSelection}
+            color="red"
+            sx={{ height: "100%" }}
+          >
+            Annuler
+          </Button>
+        </Button.Group>
       )}
     </Layout>
   );
