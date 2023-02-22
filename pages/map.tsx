@@ -22,6 +22,7 @@ import { IconLocation, IconMapPin } from "@tabler/icons-react";
 import getUserLocation from "@/utils/get-user-location";
 import { showNotification } from "@mantine/notifications";
 import useCreateDispenser from "@/hooks/useCreateDispenser";
+import { useDebouncedState } from "@mantine/hooks";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -35,8 +36,10 @@ export default function Home() {
     [number, number] | null
   >(null);
   const [zoom, setZoom] = useState(3);
-  const [bounds, setBounds] = useState<LngLatBounds | undefined>();
-  const { data: dispensers, status } = useDispenersInBounds(bounds);
+  const [debouncedBounds, setDebouncedBounds] = useDebouncedState<
+    LngLatBounds | undefined
+  >(undefined, 300);
+  const { data: dispensers, status } = useDispenersInBounds(debouncedBounds);
   const [currentDispenser, setCurrentDispenser] = useState<DispenserRow | null>(
     null
   );
@@ -50,8 +53,8 @@ export default function Home() {
 
   const handleMoveEnd = useCallback(() => {
     const nextBounds = map.current?.getBounds();
-    setBounds(nextBounds);
-  }, []);
+    setDebouncedBounds(nextBounds);
+  }, [setDebouncedBounds]);
 
   const handleCloseDispenserCard = useCallback(() => {
     setCurrentDispenser(null);
