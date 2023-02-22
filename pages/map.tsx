@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl, { GeoJSONSource, LngLatBounds, Map } from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Badge, Box } from "@mantine/core";
+import { Box, useMantineTheme } from "@mantine/core";
 import useDispenersInBounds from "@/hooks/useDispensersInBounds";
 import { MapTools } from "@/components/MapTools";
 import { DispenserRow } from "@/types/interfaces";
@@ -9,7 +9,6 @@ import DispenserCard from "@/components/dispenser-card";
 import useProfile from "@/hooks/useProfile";
 import useDeleteDispenser from "@/hooks/useDeleteDispenser";
 import { openConfirmModal } from "@mantine/modals";
-import useUpdateDispenser from "@/hooks/useUpdateDispenser";
 import { Database } from "@/utils/database.types";
 import useCreateDispenserStatus from "@/hooks/useCreateDispenserStatus";
 import Layout from "@/components/layout";
@@ -29,8 +28,8 @@ export default function Home() {
     null
   );
   const deleteDispenser = useDeleteDispenser();
-  const updateDispenser = useUpdateDispenser();
   const createDispenserStatus = useCreateDispenserStatus();
+  const theme = useMantineTheme();
 
   const handleMoveEnd = useCallback(() => {
     const nextBounds = map.current?.getBounds();
@@ -135,9 +134,23 @@ export default function Home() {
         source: "distributeurs",
         filter: ["!", ["has", "point_count"]],
         paint: {
-          "circle-color": "#11b4da",
+          "circle-color": [
+            "match",
+            ["get", "status"],
+            "notfound",
+            `${theme.colors.dark[5]}`,
+            "unknown",
+            `${theme.colors.gray[5]}`,
+            "empty",
+            `${theme.colors.red[5]}`,
+            "low",
+            `${theme.colors.orange[5]}`,
+            "ok",
+            `${theme.colors.green[5]}`,
+            `${theme.colors.gray[5]}`,
+          ],
           "circle-radius": 6,
-          "circle-stroke-width": 1,
+          "circle-stroke-width": 2,
           "circle-stroke-color": "#fff",
         },
       });

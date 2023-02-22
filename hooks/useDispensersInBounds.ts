@@ -1,6 +1,4 @@
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
-import { useCallback, useEffect } from "react";
-import { useState } from "react";
 import { LngLatBounds } from "mapbox-gl";
 import { useQuery } from "@tanstack/react-query";
 import getDispensersInBounds from "@/data-access/getDispensersInBounds";
