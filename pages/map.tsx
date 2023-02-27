@@ -253,7 +253,7 @@ export default function Home() {
             type="geojson"
             cluster
             clusterMaxZoom={14}
-            clusterRadius={40}
+            clusterRadius={50}
             data={dispensers}
           >
             <Layer
@@ -261,11 +261,11 @@ export default function Home() {
               type="circle"
               filter={["has", "point_count"]}
               paint={{
-                "circle-color": "hsla(0,0%,0%,0.75)",
-                "circle-stroke-width": 1.5,
-                "circle-stroke-color": "white",
+                "circle-color": theme.colors.blue[7],
+                "circle-stroke-width": 5,
+                "circle-stroke-color": theme.colors.blue[2],
 
-                "circle-radius": ["case", ["get", "cluster"], 10, 5],
+                "circle-radius": ["case", ["get", "cluster"], 12, 5],
               }}
             />
 
@@ -275,8 +275,11 @@ export default function Home() {
               filter={["has", "point_count"]}
               layout={{
                 "text-field": ["get", "point_count_abbreviated"],
-                "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+                "text-font": ["Open Sans Bold"],
                 "text-size": 12,
+              }}
+              paint={{
+                "text-color": theme.colors.gray[0],
               }}
             />
             <Layer
@@ -301,7 +304,7 @@ export default function Home() {
                 ],
                 "circle-radius": 6,
                 "circle-stroke-width": 2,
-                "circle-stroke-color": "#fff",
+                "circle-stroke-color": theme.colors.gray[0],
               }}
             />
           </Source>
