@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import mapboxgl, { GeoJSONSource, LngLatBounds, Map, Marker } from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
+import {
+  GeoJSONSource,
+  LngLatBounds,
+  MapboxEvent,
+  MapLayerMouseEvent,
+} from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import "mapbox-gl/dist/mapbox-gl.css";
 import {
   Box,
@@ -23,18 +28,25 @@ import getUserLocation from "@/utils/get-user-location";
 import { showNotification } from "@mantine/notifications";
 import useCreateDispenser from "@/hooks/useCreateDispenser";
 import { useDebouncedState } from "@mantine/hooks";
-
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+import Map, {
+  FullscreenControl,
+  GeolocateControl,
+  Layer,
+  MapRef,
+  Marker,
+  MarkerDragEvent,
+  Source,
+  ViewStateChangeEvent,
+} from "react-map-gl";
 
 export default function Home() {
   const { data, error } = useProfile();
-  const mapContainer = useRef(null);
-  const map = useRef<Map | null>(null);
+  const mapRef = useRef<MapRef | undefined>();
   const [lng, setLng] = useState(3.8772);
   const [lat, setLat] = useState(43.6101);
   const [draggableMarkerLocation, setDraggableMarkerLocation] = useState<
-    [number, number] | null
-  >(null);
+    [number, number]
+  >([lng, lat]);
   const [zoom, setZoom] = useState(3);
   const [debouncedBounds, setDebouncedBounds] = useDebouncedState<
     LngLatBounds | undefined
@@ -48,13 +60,7 @@ export default function Home() {
   const theme = useMantineTheme();
   const createDispenser = useCreateDispenser();
 
-  const [selectPin, setSelectPin] = useState<Marker | null>(null);
   const [isSelectingLocation, setIsSelectingLocation] = useState(false);
-
-  const handleMoveEnd = useCallback(() => {
-    const nextBounds = map.current?.getBounds();
-    setDebouncedBounds(nextBounds);
-  }, [setDebouncedBounds]);
 
   const handleCloseDispenserCard = useCallback(() => {
     setCurrentDispenser(null);
@@ -118,9 +124,6 @@ export default function Home() {
 
   const cancelPinSelection = () => {
     setIsSelectingLocation(false);
-    if (selectPin) {
-      selectPin.remove();
-    }
   };
 
   const createDispenserFromLocation = async () => {
@@ -137,176 +140,22 @@ export default function Home() {
   };
 
   const addDraggableMarker = () => {
-    if (!map.current) {
+    if (!mapRef.current) {
       return;
     }
     setIsSelectingLocation(true);
 
-    const mapCenter = map.current.getCenter();
+    const mapCenter = mapRef.current?.getCenter();
 
-    const marker = new mapboxgl.Marker({
-      draggable: true,
-    })
-      .setLngLat(mapCenter)
-      .addTo(map.current);
-
-    function onDragEnd() {
-      const lngLat = marker.getLngLat();
-      setDraggableMarkerLocation([lngLat.lng, lngLat.lat]);
-    }
-
-    marker.on("dragend", onDragEnd);
-
-    setSelectPin(marker);
+    setDraggableMarkerLocation([mapCenter.lng, mapCenter.lat]);
 
     closeAllModals();
   };
 
-  useEffect(() => {
-    if (map.current) {
-      return;
-    } // initialize map only once
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current || "",
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [lng, lat],
-      zoom: zoom,
-    });
-
-    map.current.addControl(
-      new mapboxgl.GeolocateControl({
-        positionOptions: {
-          enableHighAccuracy: true,
-        },
-        // When active the map will receive updates to the device's location as it changes.
-        trackUserLocation: true,
-        // Draw an arrow next to the location dot to indicate which direction the device is heading.
-        showUserHeading: true,
-      })
-    );
-
-    map.current.addControl(new mapboxgl.FullscreenControl());
-
-    map.current.on("load", () => {
-      handleMoveEnd();
-      map.current?.addSource("distributeurs", {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: [],
-        },
-        cluster: true,
-        clusterMaxZoom: 14, // Max zoom to cluster points on
-        clusterRadius: 40, // Radius of each cluster when clustering points (defaults to 50)
-      });
-
-      map.current?.addLayer({
-        id: "distributeurs-layer",
-        type: "circle",
-        source: "distributeurs",
-        filter: ["has", "point_count"],
-        paint: {
-          "circle-color": "hsla(0,0%,0%,0.75)",
-          "circle-stroke-width": 1.5,
-          "circle-stroke-color": "white",
-
-          "circle-radius": ["case", ["get", "cluster"], 10, 5],
-        },
-      });
-
-      map.current?.addLayer({
-        id: "cluster-count",
-        type: "symbol",
-        source: "distributeurs",
-        filter: ["has", "point_count"],
-        layout: {
-          "text-field": ["get", "point_count_abbreviated"],
-          "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
-          "text-size": 12,
-        },
-      });
-
-      map.current?.addLayer({
-        id: "unclustered-point",
-        type: "circle",
-        source: "distributeurs",
-        filter: ["!", ["has", "point_count"]],
-        paint: {
-          "circle-color": [
-            "match",
-            ["get", "status"],
-            "notfound",
-            `${theme.colors.dark[5]}`,
-            "unknown",
-            `${theme.colors.gray[5]}`,
-            "empty",
-            `${theme.colors.red[5]}`,
-            "low",
-            `${theme.colors.orange[5]}`,
-            "ok",
-            `${theme.colors.green[5]}`,
-            `${theme.colors.gray[5]}`,
-          ],
-          "circle-radius": 6,
-          "circle-stroke-width": 2,
-          "circle-stroke-color": "#fff",
-        },
-      });
-
-      map.current?.on("click", "unclustered-point", (e) => {
-        if (!e.features) {
-          return;
-        }
-
-        const id = e.features[0].properties?.id;
-        const status = e.features[0].properties?.status;
-        const location = e.features[0].properties?.location;
-
-        setCurrentDispenser({ id, status, location });
-      });
-
-      map.current?.on("click", "distributeurs-layer", (e) => {
-        const features = map.current?.queryRenderedFeatures(e.point, {
-          layers: ["distributeurs-layer"],
-        });
-
-        if (!features) {
-          return;
-        }
-
-        const clusterId = features[0].properties?.cluster_id;
-
-        (
-          map.current?.getSource("distributeurs") as GeoJSONSource
-        ).getClusterExpansionZoom(clusterId, (err, zoom) => {
-          if (err) return;
-
-          map.current?.easeTo({
-            center: (features[0].geometry as GeoJSON.Point).coordinates as [
-              number,
-              number
-            ],
-            zoom,
-          });
-        });
-      });
-    });
-  }, []);
-
-  useEffect(() => {
-    if (map.current) {
-      map.current.on("moveend", handleMoveEnd);
-      return;
-    }
-  }, [handleMoveEnd]);
-
-  useEffect(() => {
-    if (map.current && dispensers) {
-      (map.current.getSource("distributeurs") as GeoJSONSource)?.setData(
-        dispensers
-      );
-    }
-  }, [dispensers]);
+  const handleMarkerDragEnd = (e: MarkerDragEvent) => {
+    const lngLat = e.target.getLngLat();
+    setDraggableMarkerLocation([lngLat.lng, lngLat.lat]);
+  };
 
   useEffect(() => {
     if (deleteDispenser.status === "success") {
@@ -318,20 +167,145 @@ export default function Home() {
   useEffect(() => {
     if (createDispenser.status === "success") {
       createDispenser.reset();
-      selectPin?.remove();
-      setSelectPin(null);
       setIsSelectingLocation(false);
     }
-  }, [createDispenser, selectPin]);
+  }, [createDispenser]);
+
+  const handleMapLoad = (e: MapboxEvent) => {
+    setDebouncedBounds(e.target.getBounds());
+  };
+
+  const handleMoveEnd = (e: ViewStateChangeEvent) => {
+    const nextBounds = e.target.getBounds();
+    setDebouncedBounds(nextBounds);
+  };
+
+  const handleMapClick = (e: MapLayerMouseEvent) => {
+    const feature = e.features?.[0];
+    if (!feature) {
+      return;
+    }
+
+    switch (feature.layer.id) {
+      case "dispensers-clusters":
+        const clusterId = feature.properties?.cluster_id;
+        (
+          mapRef.current?.getSource(feature.source) as GeoJSONSource
+        ).getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err) return;
+
+          mapRef.current?.easeTo({
+            center: (feature.geometry as GeoJSON.Point).coordinates as [
+              number,
+              number
+            ],
+            zoom,
+          });
+        });
+        break;
+      case "dispensers-points":
+        const id = feature.properties?.id;
+        const status = feature.properties?.status;
+        const location = feature.properties?.location;
+
+        setCurrentDispenser({ id, status, location });
+        break;
+    }
+  };
 
   return (
     <Layout>
       <Box sx={{ height: "100%" }}>
-        <Box
-          sx={{ height: "100%" }}
-          ref={mapContainer}
-          className="map-container"
-        />
+        <Map
+          // @ts-ignore
+          ref={mapRef}
+          initialViewState={{
+            longitude: lng,
+            latitude: lat,
+            zoom: zoom,
+          }}
+          style={{ width: "100%", height: "100%" }}
+          mapStyle="mapbox://styles/mapbox/streets-v12"
+          mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+          reuseMaps
+          interactiveLayerIds={["dispensers-clusters", "dispensers-points"]}
+          onLoad={handleMapLoad}
+          onClick={handleMapClick}
+          onMoveEnd={handleMoveEnd}
+        >
+          <GeolocateControl
+            positionOptions={{ enableHighAccuracy: true }}
+            trackUserLocation={true}
+            showUserHeading={true}
+          />
+          <FullscreenControl />
+          <Source
+            id="dispensers"
+            type="geojson"
+            cluster
+            clusterMaxZoom={14}
+            clusterRadius={40}
+            data={dispensers}
+          >
+            <Layer
+              id="dispensers-clusters"
+              type="circle"
+              filter={["has", "point_count"]}
+              paint={{
+                "circle-color": "hsla(0,0%,0%,0.75)",
+                "circle-stroke-width": 1.5,
+                "circle-stroke-color": "white",
+
+                "circle-radius": ["case", ["get", "cluster"], 10, 5],
+              }}
+            />
+
+            <Layer
+              id="dispensers-clusters-count"
+              type="symbol"
+              filter={["has", "point_count"]}
+              layout={{
+                "text-field": ["get", "point_count_abbreviated"],
+                "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+                "text-size": 12,
+              }}
+            />
+            <Layer
+              id="dispensers-points"
+              type="circle"
+              filter={["!", ["has", "point_count"]]}
+              paint={{
+                "circle-color": [
+                  "match",
+                  ["get", "status"],
+                  "notfound",
+                  `${theme.colors.dark[5]}`,
+                  "unknown",
+                  `${theme.colors.gray[5]}`,
+                  "empty",
+                  `${theme.colors.red[5]}`,
+                  "low",
+                  `${theme.colors.orange[5]}`,
+                  "ok",
+                  `${theme.colors.green[5]}`,
+                  `${theme.colors.gray[5]}`,
+                ],
+                "circle-radius": 6,
+                "circle-stroke-width": 2,
+                "circle-stroke-color": "#fff",
+              }}
+            />
+          </Source>
+
+          {isSelectingLocation && (
+            <Marker
+              longitude={draggableMarkerLocation[0]}
+              latitude={draggableMarkerLocation[1]}
+              draggable
+              onDragEnd={handleMarkerDragEnd}
+            />
+          )}
+        </Map>
       </Box>
       <Box
         sx={{

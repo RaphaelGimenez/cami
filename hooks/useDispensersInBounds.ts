@@ -3,7 +3,7 @@ import { LngLatBounds } from "mapbox-gl";
 import { useQuery } from "@tanstack/react-query";
 import getDispensersInBounds from "@/data-access/getDispensersInBounds";
 
-const useDispenersInBounds = (bounds: LngLatBounds | undefined) => {
+const useDispensersInBounds = (bounds: LngLatBounds | undefined) => {
   const supabase = useSupabaseClient();
 
   return useQuery({
@@ -12,4 +12,4 @@ const useDispenersInBounds = (bounds: LngLatBounds | undefined) => {
   });
 };
 
-export default useDispenersInBounds;
+export default useDispensersInBounds;
