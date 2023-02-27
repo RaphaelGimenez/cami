@@ -1,20 +1,21 @@
+import { LngLatBounds } from "mapbox-gl";
 import getDispensersInBounds from "@/data-access/getDispensersInBounds";
 import { NewDispenser } from "@/types/interfaces";
-import boundingBoxFromPoint from "@/utils/bounding-box-from-point";
 import { Database } from "@/utils/database.types";
 import { SupabaseClient } from "@supabase/supabase-js";
+import bbox from "@turf/bbox";
+import circle from "@turf/circle";
 
 const createDispenser = async (
   supabase: SupabaseClient<Database>,
   data: NewDispenser
 ) => {
-  const perimeter = boundingBoxFromPoint(
-    data.location[0],
-    data.location[1],
-    10
-  );
+  const c = circle([data.location[0], data.location[1]], 0.01, {
+    units: "kilometers",
+  });
+  const perimeter = bbox(c) as [number, number, number, number];
 
-  const d = await getDispensersInBounds(supabase, perimeter);
+  const d = await getDispensersInBounds(supabase, new LngLatBounds(perimeter));
 
   if (d.features.length > 0) {
     throw new Error(
