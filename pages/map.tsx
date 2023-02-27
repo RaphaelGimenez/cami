@@ -51,7 +51,10 @@ export default function Home() {
   const [debouncedBounds, setDebouncedBounds] = useDebouncedState<
     LngLatBounds | undefined
   >(undefined, 300);
-  const { data: dispensers, status } = useDispenersInBounds(debouncedBounds);
+  const { data: dispensersData, status } =
+    useDispenersInBounds(debouncedBounds);
+  const [dispensers, setDispensers] =
+    useState<GeoJSON.FeatureCollection<GeoJSON.Point>>();
   const [currentDispenser, setCurrentDispenser] = useState<DispenserRow | null>(
     null
   );
@@ -61,6 +64,12 @@ export default function Home() {
   const createDispenser = useCreateDispenser();
 
   const [isSelectingLocation, setIsSelectingLocation] = useState(false);
+
+  useEffect(() => {
+    if (status === "success") {
+      setDispensers(dispensersData);
+    }
+  }, [dispensersData, status]);
 
   const handleCloseDispenserCard = useCallback(() => {
     setCurrentDispenser(null);
