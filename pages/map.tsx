@@ -39,6 +39,7 @@ import Map, {
   ViewStateChangeEvent,
 } from "react-map-gl";
 import MapDispensers from "@/components/Map/Dispensers/Index";
+import useDispenserCard from "@/hooks/useDispenserCard";
 
 export default function Home() {
   const { data, error } = useProfile();
@@ -53,43 +54,13 @@ export default function Home() {
     LngLatBounds | undefined
   >(undefined, 300);
 
-  const [currentDispenser, setCurrentDispenser] = useState<DispenserRow | null>(
-    null
-  );
+  const dispenserCard = useDispenserCard();
 
   const deleteDispenser = useDeleteDispenser();
   const createDispenserStatus = useCreateDispenserStatus();
   const createDispenser = useCreateDispenser();
 
   const [isSelectingLocation, setIsSelectingLocation] = useState(false);
-
-  const handleCloseDispenserCard = useCallback(() => {
-    setCurrentDispenser(null);
-  }, []);
-
-  const handleDeleteDispenser = useCallback(
-    (id: number) => {
-      openConfirmModal({
-        title: "Supprimer le distributeur ?",
-        centered: true,
-        labels: { confirm: "Supprimer", cancel: "Annuler" },
-        confirmProps: { color: "red" },
-        onCancel: () => console.log("Cancel"),
-        onConfirm: () => deleteDispenser.mutate(id),
-      });
-    },
-    [deleteDispenser]
-  );
-
-  const handleVote = useCallback(
-    (id: number, status: Database["public"]["Enums"]["DISPENSER_STATUS"]) => {
-      createDispenserStatus.mutate({
-        dispenserId: id,
-        status,
-      });
-    },
-    [createDispenserStatus]
-  );
 
   const confirmCreateDispenser = () => {
     openModal({
@@ -161,13 +132,6 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (deleteDispenser.status === "success") {
-      handleCloseDispenserCard();
-      deleteDispenser.reset();
-    }
-  }, [deleteDispenser, handleCloseDispenserCard]);
-
-  useEffect(() => {
     if (createDispenser.status === "success") {
       createDispenser.reset();
       setIsSelectingLocation(false);
@@ -216,8 +180,9 @@ export default function Home() {
         const id = feature.properties?.id;
         const status = feature.properties?.status;
         const location = feature.properties?.location;
+        const created_at = feature.properties?.created_at;
 
-        setCurrentDispenser({ id, status, location });
+        dispenserCard.open({ id, status, location, created_at });
         break;
     }
   };
@@ -275,17 +240,14 @@ export default function Home() {
         />
       </Box>
 
-      {currentDispenser && (
+      {dispenserCard.dispenser && (
         <DispenserCard
-          dispenser={currentDispenser}
-          onClose={handleCloseDispenserCard}
-          onDelete={handleDeleteDispenser}
-          onVote={handleVote}
+          dispenser={dispenserCard.dispenser}
+          onClose={dispenserCard.close}
+          onDelete={dispenserCard.delete}
+          onVote={dispenserCard.addStatus}
           userRole={data?.role}
-          isLoading={
-            deleteDispenser.status === "loading" ||
-            createDispenserStatus.status === "loading"
-          }
+          isLoading={dispenserCard.isLoading}
         />
       )}
 

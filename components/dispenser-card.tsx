@@ -15,7 +15,7 @@ import {
 import { IconTrash } from "@tabler/icons-react";
 
 interface DispenserCardProps {
-  dispenser: DispenserRow;
+  dispenser: Database["public"]["Tables"]["dispensers"]["Row"];
   onClose: () => void;
   onDelete: (dispenserId: number) => void;
   userRole?: "admin" | "user";
