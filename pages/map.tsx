@@ -38,6 +38,7 @@ import Map, {
   Source,
   ViewStateChangeEvent,
 } from "react-map-gl";
+import MapDispensers from "@/components/Map/Dispensers/Index";
 
 export default function Home() {
   const { data, error } = useProfile();
@@ -51,25 +52,16 @@ export default function Home() {
   const [debouncedBounds, setDebouncedBounds] = useDebouncedState<
     LngLatBounds | undefined
   >(undefined, 300);
-  const { data: dispensersData, status } =
-    useDispenersInBounds(debouncedBounds);
-  const [dispensers, setDispensers] =
-    useState<GeoJSON.FeatureCollection<GeoJSON.Point>>();
+
   const [currentDispenser, setCurrentDispenser] = useState<DispenserRow | null>(
     null
   );
+
   const deleteDispenser = useDeleteDispenser();
   const createDispenserStatus = useCreateDispenserStatus();
-  const theme = useMantineTheme();
   const createDispenser = useCreateDispenser();
 
   const [isSelectingLocation, setIsSelectingLocation] = useState(false);
-
-  useEffect(() => {
-    if (status === "success") {
-      setDispensers(dispensersData);
-    }
-  }, [dispensersData, status]);
 
   const handleCloseDispenserCard = useCallback(() => {
     setCurrentDispenser(null);
@@ -256,94 +248,8 @@ export default function Home() {
             showUserHeading={true}
           />
           <FullscreenControl />
-          <Source
-            id="dispensers"
-            type="geojson"
-            cluster
-            clusterMaxZoom={14}
-            clusterRadius={50}
-            data={dispensers}
-          >
-            <Layer
-              id="dispensers-clusters"
-              type="circle"
-              filter={["has", "point_count"]}
-              paint={{
-                "circle-color": theme.colors.blue[7],
-                "circle-stroke-width": 5,
-                "circle-stroke-color": theme.colors.blue[2],
 
-                "circle-radius": ["case", ["get", "cluster"], 12, 5],
-              }}
-            />
-
-            <Layer
-              id="dispensers-clusters-count"
-              type="symbol"
-              filter={["has", "point_count"]}
-              layout={{
-                "text-field": ["get", "point_count_abbreviated"],
-                "text-font": ["Open Sans Bold"],
-                "text-size": 12,
-              }}
-              paint={{
-                "text-color": theme.colors.gray[0],
-              }}
-            />
-
-            <Layer
-              id="dispensers-points"
-              type="circle"
-              filter={["!", ["has", "point_count"]]}
-              paint={{
-                "circle-color": [
-                  "match",
-                  ["get", "status"],
-                  "notfound",
-                  `${theme.colors.dark[5]}`,
-                  "unknown",
-                  `${theme.colors.gray[5]}`,
-                  "empty",
-                  `${theme.colors.red[5]}`,
-                  "low",
-                  `${theme.colors.orange[5]}`,
-                  "ok",
-                  `${theme.colors.green[5]}`,
-                  `${theme.colors.gray[5]}`,
-                ],
-                "circle-radius": 11,
-                "circle-stroke-width": 3,
-                "circle-stroke-color": theme.colors.gray[0],
-              }}
-            />
-
-            <Layer
-              id="dispensers-points-icon"
-              type="symbol"
-              filter={["!", ["has", "point_count"]]}
-              layout={{
-                "icon-image": "poo-bag",
-                "icon-size": 0.6,
-              }}
-              paint={{
-                "icon-color": [
-                  "match",
-                  ["get", "status"],
-                  "notfound",
-                  `${theme.colors.gray[0]}`,
-                  "unknown",
-                  `${theme.colors.dark[9]}`,
-                  "empty",
-                  `${theme.colors.dark[9]}`,
-                  "low",
-                  `${theme.colors.dark[9]}`,
-                  "ok",
-                  `${theme.colors.dark[9]}`,
-                  `${theme.colors.dark[9]}`,
-                ],
-              }}
-            />
-          </Source>
+          <MapDispensers bounds={debouncedBounds} />
 
           {isSelectingLocation && (
             <Marker
