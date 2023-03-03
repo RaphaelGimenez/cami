@@ -182,6 +182,12 @@ export default function Home() {
 
   const handleMapLoad = (e: MapboxEvent) => {
     setDebouncedBounds(e.target.getBounds());
+
+    e.target.loadImage("/assets/icons/poo-bag.png", (error, image) => {
+      if (error) throw error;
+      if (!image) return;
+      e.target.addImage("poo-bag", image, { sdf: true });
+    });
   };
 
   const handleMoveEnd = (e: ViewStateChangeEvent) => {
@@ -282,6 +288,7 @@ export default function Home() {
                 "text-color": theme.colors.gray[0],
               }}
             />
+
             <Layer
               id="dispensers-points"
               type="circle"
@@ -302,9 +309,36 @@ export default function Home() {
                   `${theme.colors.green[5]}`,
                   `${theme.colors.gray[5]}`,
                 ],
-                "circle-radius": 6,
-                "circle-stroke-width": 2,
+                "circle-radius": 11,
+                "circle-stroke-width": 3,
                 "circle-stroke-color": theme.colors.gray[0],
+              }}
+            />
+
+            <Layer
+              id="dispensers-points-icon"
+              type="symbol"
+              filter={["!", ["has", "point_count"]]}
+              layout={{
+                "icon-image": "poo-bag",
+                "icon-size": 0.6,
+              }}
+              paint={{
+                "icon-color": [
+                  "match",
+                  ["get", "status"],
+                  "notfound",
+                  `${theme.colors.gray[0]}`,
+                  "unknown",
+                  `${theme.colors.dark[9]}`,
+                  "empty",
+                  `${theme.colors.dark[9]}`,
+                  "low",
+                  `${theme.colors.dark[9]}`,
+                  "ok",
+                  `${theme.colors.dark[9]}`,
+                  `${theme.colors.dark[9]}`,
+                ],
               }}
             />
           </Source>

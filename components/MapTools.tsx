@@ -6,10 +6,10 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { IconPennant, IconTools } from "@tabler/icons-react";
-import getUserLocation from "@/utils/get-user-location";
 import { showNotification } from "@mantine/notifications";
 import { useEffect } from "react";
 import { MutationStatus } from "@tanstack/react-query";
+import IconPooBag from "@/components/icons/IconPooBag";
 
 interface MapToolsProps {
   createDispenser: () => void;
@@ -45,9 +45,7 @@ export function MapTools({ createDispenser, status }: MapToolsProps) {
       <Menu.Dropdown>
         <Menu.Label>Ajouter</Menu.Label>
         <Menu.Item
-          icon={
-            <IconPennant size={16} color={theme.colors.blue[6]} stroke={1.5} />
-          }
+          icon={<IconPooBag size={18} color={theme.colors.blue[6]} />}
           onClick={() => createDispenser()}
         >
           Distributeur de sacs
