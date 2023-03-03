@@ -139,6 +139,8 @@ export default function Home() {
     try {
       const location = await getUserLocation();
       createDispenser.mutate({ location });
+
+      closeAllModals();
     } catch (error) {
       showNotification({
         color: "red",
