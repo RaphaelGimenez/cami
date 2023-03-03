@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   GeoJSONSource,
   LngLatBounds,
@@ -6,22 +6,11 @@ import {
   MapLayerMouseEvent,
 } from "mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import "mapbox-gl/dist/mapbox-gl.css";
-import {
-  Box,
-  Button,
-  Group,
-  LoadingOverlay,
-  useMantineTheme,
-} from "@mantine/core";
-import useDispenersInBounds from "@/hooks/useDispensersInBounds";
+import { Box, Button, Group, LoadingOverlay } from "@mantine/core";
 import { MapTools } from "@/components/MapTools";
-import { DispenserRow } from "@/types/interfaces";
 import DispenserCard from "@/components/dispenser-card";
 import useProfile from "@/hooks/useProfile";
-import useDeleteDispenser from "@/hooks/useDeleteDispenser";
-import { openConfirmModal, openModal, closeAllModals } from "@mantine/modals";
-import { Database } from "@/utils/database.types";
-import useCreateDispenserStatus from "@/hooks/useCreateDispenserStatus";
+import { openModal, closeAllModals } from "@mantine/modals";
 import Layout from "@/components/layout";
 import { IconLocation, IconMapPin } from "@tabler/icons-react";
 import getUserLocation from "@/utils/get-user-location";
@@ -31,11 +20,9 @@ import { useDebouncedState } from "@mantine/hooks";
 import Map, {
   FullscreenControl,
   GeolocateControl,
-  Layer,
   MapRef,
   Marker,
   MarkerDragEvent,
-  Source,
   ViewStateChangeEvent,
 } from "react-map-gl";
 import MapDispensers from "@/components/Map/Dispensers/Index";
@@ -56,8 +43,6 @@ export default function Home() {
 
   const dispenserCard = useDispenserCard();
 
-  const deleteDispenser = useDeleteDispenser();
-  const createDispenserStatus = useCreateDispenserStatus();
   const createDispenser = useCreateDispenser();
 
   const [isSelectingLocation, setIsSelectingLocation] = useState(false);
